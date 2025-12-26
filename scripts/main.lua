@@ -63,7 +63,7 @@ local function CreateButton()
     -- Runtime instances don't have RF_WasLoaded, while blueprint templates do
     local Canvas = FindObject("CanvasPanel", "CanvasPanel_42", EObjectFlags.RF_NoFlags, EObjectFlags.RF_WasLoaded)
     if not Canvas:IsValid() then
-        Log("Canvas not found", "error")
+        Log("Canvas not found (not in main menu)", "debug")
         return
     end
 
