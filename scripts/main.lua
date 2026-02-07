@@ -163,7 +163,7 @@ local function TryRegisterHook()
         "/Game/Blueprints/Widgets/MenuSystem/W_MainMenuButton.W_MainMenuButton_C:BndEvt__AbioticButton_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature",
         function(Context)
             local btn = Context:get()
-            if not btn or not btn:IsValid() then return end
+            if not btn:IsValid() then return end
 
             if not CustomServerBtn:IsValid() then
                 CreateButton()
