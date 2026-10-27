@@ -75,7 +75,18 @@ local function CreateButton()
     -- Find live runtime canvas instance
     -- RF_NoFlags = no required flags, RF_WasLoaded = exclude blueprint templates loaded from disk
     -- Runtime instances don't have RF_WasLoaded, while blueprint templates do
-    local Canvas = FindObject("CanvasPanel", "CanvasPanel_42", EObjectFlags.RF_NoFlags, EObjectFlags.RF_WasLoaded)
+
+    -- CanvasPanel /Engine/Transient.AbioticGameEngine_2147482617:Abiotic_GameInstance_C_2147482504.W_MainMenu_Master_C_2147482314.WidgetTree_2147482313.W_MainMenu_Play.WidgetTree_2147482279.CanvasPanel_42
+    -- local Canvas = FindObject("CanvasPanel", "CanvasPanel_42", EObjectFlags.RF_NoFlags, EObjectFlags.RF_WasLoaded)
+    local Canvas = nil
+    local Canvas_List = FindObjects(0, "CanvasPanel", "CanvasPanel_42", EObjectFlags.RF_NoFlags, EObjectFlags.RF_WasLoaded)
+
+    for _, Object in pairs(Canvas_List) do
+        if string.find(Object:GetFullName(), "W_MainMenu_Play") then
+            Canvas = Object
+        end
+    end
+
     if not Canvas:IsValid() then
         Log("Canvas not found (not in main menu)", "debug")
         return nil
