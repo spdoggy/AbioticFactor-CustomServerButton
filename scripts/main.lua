@@ -2,6 +2,8 @@ print("=== [Custom Server Button] MOD LOADING ===\n")
 
 local UEHelpers = require("UEHelpers")
 local Config = require("../config")
+local Config2 = require("../config2")
+local Config3 = require("../config3")
 local DEBUG = Config.Debug or false
 
 local SERVER_IP = Config.IP or "127.0.0.1"
@@ -10,9 +12,17 @@ local SERVER_PASSWORD = Config.Password or ""
 local BUTTON_TEXT = Config.ButtonText or "Custom Server Button"
 local BUTTON_ICON = Config.Icon
 
--- Cached references (cleared on gameplay enter)
-local CustomServerBtn = CreateInvalidObject()
-local ButtonIconTexture = CreateInvalidObject()
+local SERVER_IP2 = Config2.IP or "127.0.0.1"
+local SERVER_PORT2 = Config2.Port or 7777
+local SERVER_PASSWORD2 = Config2.Password or ""
+local BUTTON_TEXT2 = Config2.ButtonText or "Custom Server Button"
+local BUTTON_ICON2 = Config2.Icon
+
+local SERVER_IP3 = Config3.IP or "127.0.0.1"
+local SERVER_PORT3 = Config3.Port or 7777
+local SERVER_PASSWORD3 = Config3.Password or ""
+local BUTTON_TEXT3 = Config3.ButtonText or "Custom Server Button"
+local BUTTON_ICON3 = Config3.Icon
 
 local function Log(message, level)
     level = level or "info"
@@ -42,6 +52,26 @@ local function validateConfig()
         Log("Invalid port in config, using 7777", "error")
         SERVER_PORT = 7777
     end
+
+    if SERVER_IP2 and type(SERVER_IP2) ~= "string" then
+        Log("Invalid server2 address in config, using 127.0.0.1", "error")
+        SERVER_IP2 = "127.0.0.1"
+    end
+
+    if SERVER_PORT2 and (type(SERVER_PORT2) ~= "number" or SERVER_PORT2 <= 0) then
+        Log("Invalid port2 in config, using 7777", "error")
+        SERVER_PORT2 = 7777
+    end
+
+    if SERVER_IP3 and type(SERVER_IP3) ~= "string" then
+        Log("Invalid server3 address in config, using 127.0.0.1", "error")
+        SERVER_IP3 = "127.0.0.1"
+    end
+
+    if SERVER_PORT3 and (type(SERVER_PORT3) ~= "number" or SERVER_PORT3 <= 0) then
+        Log("Invalid port3 in config, using 7777", "error")
+        SERVER_PORT3 = 7777
+    end
 end
 
 validateConfig()
@@ -59,6 +89,8 @@ local function ConvertColor(colorConfig, defaultR, defaultG, defaultB)
 end
 
 local BUTTON_TEXT_COLOR = ConvertColor(Config.TextColor, 42, 255, 45)
+local BUTTON_TEXT_COLOR2 = ConvertColor(Config2.TextColor, 42, 255, 45)
+local BUTTON_TEXT_COLOR3 = ConvertColor(Config3.TextColor, 42, 255, 45)
 
 -- Clear cached references when entering gameplay (menu widgets destroyed)
 RegisterInitGameStatePreHook(function()
@@ -68,9 +100,6 @@ end)
 
 
 local function CreateButton()
-    if CustomServerBtn:IsValid() then
-        return CustomServerBtn
-    end
 
     -- Find live runtime canvas instance
     -- RF_NoFlags = no required flags, RF_WasLoaded = exclude blueprint templates loaded from disk
@@ -89,79 +118,188 @@ local function CreateButton()
 
     if not Canvas:IsValid() then
         Log("Canvas not found (not in main menu)", "debug")
-        return nil
+        return
     end
 
     local ButtonClass = StaticFindObject("/Game/Blueprints/Widgets/MenuSystem/W_MainMenuButton.W_MainMenuButton_C")
     if not ButtonClass:IsValid() then
         Log("Button class not found", "error")
-        return nil
+        return
     end
 
-    local btn = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer"))
-    if not btn:IsValid() then
+    local CustomServerBtn = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer"))
+    if not CustomServerBtn or not CustomServerBtn:IsValid() then
         Log("Failed to create button", "error")
-        return nil
+        return
     end
 
     if BUTTON_ICON and BUTTON_ICON ~= "" then
-        if not ButtonIconTexture:IsValid() then
-            local texture = StaticFindObject("/Game/Textures/GUI/Icons/" .. BUTTON_ICON .. "." .. BUTTON_ICON)
-            if texture:IsValid() then
-                ButtonIconTexture = texture
-            end
-        end
-        if ButtonIconTexture:IsValid() then
-            btn.Icon = ButtonIconTexture
+        local iconTexture = StaticFindObject("/Game/Textures/GUI/Icons/" .. BUTTON_ICON .. "." .. BUTTON_ICON)
+        if iconTexture:IsValid() then
+            CustomServerBtn.Icon = iconTexture
+        else
+            print("invalid iconTexture")
         end
     end
 
-    btn.RenderTransform.Scale = { X = 0.8, Y = 0.8 }
-    btn.DefaultTextColor = BUTTON_TEXT_COLOR
+    CustomServerBtn.RenderTransform.Scale = { X = 0.8, Y = 0.8 }
+    CustomServerBtn.DefaultTextColor = BUTTON_TEXT_COLOR
 
-    local Slot = Canvas:AddChildToCanvas(btn)
-    if Slot:IsValid() then
-        Slot:SetPosition({ X = 155, Y = 680.0 })
-        Slot:SetAnchors({ Min = { X = 0.0, Y = 1.0 }, Max = { X = 0.0, Y = 1.0 } })
+    local Slot = Canvas:AddChildToCanvas(CustomServerBtn)
+    Slot:SetPosition({ X = 155, Y = 680.0 })
+    Slot:SetAnchors({ Min = { X = 0.0, Y = 1.0 }, Max = { X = 0.0, Y = 1.0 } })
+
+    local ok, labelText = pcall(function() return CustomServerBtn.ButtonLabelText end)
+    if ok and labelText:IsValid() then
+        pcall(function() labelText:SetText(FText(BUTTON_TEXT)) end)
+    else
+        Log("ButtonLabelText not available", "warning")
     end
 
-    local labelText = btn.ButtonLabelText
-    if labelText:IsValid() then
-        labelText:SetText(FText(BUTTON_TEXT))
+
+    ------------ Bt2n
+    local CustomServerBtn2 = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer2"))
+    if not CustomServerBtn2 or not CustomServerBtn2:IsValid() then
+        Log("Failed to create button2", "error")
+        return
     end
 
-    CustomServerBtn = btn
-    return btn
+    if BUTTON_ICON2 and BUTTON_ICON2 ~= "" then
+        local iconTexture = StaticFindObject("/Game/Textures/GUI/Icons/" .. BUTTON_ICON2 .. "." .. BUTTON_ICON2)
+        if iconTexture:IsValid() then
+            CustomServerBtn2.Icon = iconTexture
+        end
+    end
+
+    CustomServerBtn2.RenderTransform.Scale = { X = 0.8, Y = 0.8 }
+    CustomServerBtn2.DefaultTextColor = BUTTON_TEXT_COLOR2
+
+    local Slot2 = Canvas:AddChildToCanvas(CustomServerBtn2)
+    Slot2:SetPosition({ X = 155, Y = 730.0 })
+    Slot2:SetAnchors({ Min = { X = 0.0, Y = 1.0 }, Max = { X = 0.0, Y = 1.0 } })
+
+    local ok, labelText = pcall(function() return CustomServerBtn2.ButtonLabelText end)
+    if ok and labelText:IsValid() then
+        pcall(function() labelText:SetText(FText(BUTTON_TEXT2)) end)
+    else
+        Log("ButtonLabelText not available", "warning")
+    end
+
+
+
+    ------------ Bt3n
+    local CustomServerBtn3 = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer3"))
+    if not CustomServerBtn3 or not CustomServerBtn3:IsValid() then
+        Log("Failed to create button2", "error")
+        return
+    end
+
+    if BUTTON_ICON3 and BUTTON_ICON3 ~= "" then
+        local iconTexture = StaticFindObject("/Game/Textures/GUI/Icons/" .. BUTTON_ICON3 .. "." .. BUTTON_ICON3)
+        if iconTexture:IsValid() then
+            CustomServerBtn3.Icon = iconTexture
+        end
+    end
+
+    
+    CustomServerBtn3.RenderTransform.Scale = { X = 0.8, Y = 0.8 }
+    CustomServerBtn3.DefaultTextColor = BUTTON_TEXT_COLOR3
+
+    local Slot3 = Canvas:AddChildToCanvas(CustomServerBtn3)
+    Slot3:SetPosition({ X = 700, Y = 730.0 })
+    Slot3:SetAnchors({ Min = { X = 0.0, Y = 1.0 }, Max = { X = 0.0, Y = 1.0 } })
+
+    local ok, labelText = pcall(function() return CustomServerBtn3.ButtonLabelText end)
+    if ok and labelText:IsValid() then
+        pcall(function() labelText:SetText(FText(BUTTON_TEXT3)) end)
+    else
+        Log("ButtonLabelText not available", "warning")
+    end
 end
 
-local function ConnectToServer()
-    local Master = FindFirstOf("W_MainMenu_Master_C")
-    if not Master:IsValid() then
-        Log("Master menu not found", "error")
-        return
-    end
+local function OnButtonClick(Context)
+    local btn = Context:get()
+    if btn:IsValid() and btn:GetFullName():find("Button_CustomServer2") then
+        local Master = FindFirstOf("W_MainMenu_Master_C")
+        if not Master:IsValid() then
+            Log("Master menu not found", "error")
+            return
+        end
 
-    local ServerBrowser = Master.W_ServerBrowser
-    if not ServerBrowser:IsValid() then
-        Log("ServerBrowser not found", "error")
-        return
-    end
+        local ok, ServerBrowser = pcall(function()
+            return Master.W_ServerBrowser
+        end)
 
-    local KismetSystemLibrary = UEHelpers.GetKismetSystemLibrary()
-    if not KismetSystemLibrary:IsValid() then
-        Log("KismetSystemLibrary not found", "error")
-        return
-    end
+        if ok and ServerBrowser:IsValid() then
+            local KismetSystemLibrary = UEHelpers.GetKismetSystemLibrary()
+            if not KismetSystemLibrary:IsValid() then
+                Log("KismetSystemLibrary not found", "error")
+                return
+            end
 
-    local cmd = "open " .. SERVER_IP .. ":" .. tostring(SERVER_PORT)
-    if SERVER_PASSWORD ~= "" then
-        cmd = cmd .. "?pw=" .. SERVER_PASSWORD
-    end
+            local cmd = "open " .. SERVER_IP2 .. ":" .. tostring(SERVER_PORT2)
+            if SERVER_PASSWORD2 ~= "" then
+                cmd = cmd .. "?pw=" .. SERVER_PASSWORD2
+            end
+            KismetSystemLibrary:ExecuteConsoleCommand(ServerBrowser, cmd, nil)
+        else
+            Log("ServerBrowser not found", "error")
+        end
 
-    Log("Connecting to " .. SERVER_IP .. ":" .. tostring(SERVER_PORT))
-    pcall(function()
-        KismetSystemLibrary:ExecuteConsoleCommand(ServerBrowser, cmd, nil)
-    end)
+    elseif btn:IsValid() and btn:GetFullName():find("Button_CustomServer3") then
+        local Master = FindFirstOf("W_MainMenu_Master_C")
+        if not Master:IsValid() then
+            Log("Master menu not found", "error")
+            return
+        end
+
+        local ok, ServerBrowser = pcall(function()
+            return Master.W_ServerBrowser
+        end)
+
+        if ok and ServerBrowser:IsValid() then
+            local KismetSystemLibrary = UEHelpers.GetKismetSystemLibrary()
+            if not KismetSystemLibrary:IsValid() then
+                Log("KismetSystemLibrary not found", "error")
+                return
+            end
+
+            local cmd = "open " .. SERVER_IP3 .. ":" .. tostring(SERVER_PORT3)
+            if SERVER_PASSWORD3 ~= "" then
+                cmd = cmd .. "?pw=" .. SERVER_PASSWORD3
+            end
+            KismetSystemLibrary:ExecuteConsoleCommand(ServerBrowser, cmd, nil)
+        else
+            Log("ServerBrowser not found", "error")
+        end
+
+    elseif btn:IsValid() and btn:GetFullName():find("Button_CustomServer") then
+        local Master = FindFirstOf("W_MainMenu_Master_C")
+        if not Master:IsValid() then
+            Log("Master menu not found", "error")
+            return
+        end
+
+        local ok, ServerBrowser = pcall(function()
+            return Master.W_ServerBrowser
+        end)
+
+        if ok and ServerBrowser:IsValid() then
+            local KismetSystemLibrary = UEHelpers.GetKismetSystemLibrary()
+            if not KismetSystemLibrary:IsValid() then
+                Log("KismetSystemLibrary not found", "error")
+                return
+            end
+
+            local cmd = "open " .. SERVER_IP .. ":" .. tostring(SERVER_PORT)
+            if SERVER_PASSWORD ~= "" then
+                cmd = cmd .. "?pw=" .. SERVER_PASSWORD
+            end
+            KismetSystemLibrary:ExecuteConsoleCommand(ServerBrowser, cmd, nil)
+        else
+            Log("ServerBrowser not found", "error")
+        end
+    end
 end
 
 -- Hook mainmenu button clicks - when clicked it means a menu exists, so create our custom button (if not already present)
@@ -176,13 +314,14 @@ local function TryRegisterHook()
             local btn = Context:get()
             if not btn:IsValid() then return end
 
-            if not CustomServerBtn:IsValid() then
+            local existingButton = FindObject("W_MainMenuButton_C", "Button_CustomServer")
+            if not existingButton:IsValid() then
                 CreateButton()
             end
 
             local fullName = btn:GetFullName()
             if fullName:find("Button_CustomServer") then
-                ConnectToServer()
+                OnButtonClick(Context)
             end
         end)
 
