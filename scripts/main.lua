@@ -24,6 +24,14 @@ local SERVER_PASSWORD3 = Config3.Password or ""
 local BUTTON_TEXT3 = Config3.ButtonText or "Custom Server Button"
 local BUTTON_ICON3 = Config3.Icon
 
+-- Cached references (cleared on gameplay enter)
+local CustomServerBtn = CreateInvalidObject()
+local CustomServerBtn2 = CreateInvalidObject()
+local CustomServerBtn3 = CreateInvalidObject()
+local ButtonIconTexture = CreateInvalidObject()
+
+
+
 local function Log(message, level)
     level = level or "info"
 
@@ -116,7 +124,7 @@ local function CreateButton()
         end
     end
 
-    if not Canvas:IsValid() then
+    if Canvas == nil or not Canvas:IsValid() then
         Log("Canvas not found (not in main menu)", "debug")
         return
     end
@@ -158,7 +166,7 @@ local function CreateButton()
 
 
     ------------ Bt2n
-    local CustomServerBtn2 = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer2"))
+    CustomServerBtn2 = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer2"))
     if not CustomServerBtn2 or not CustomServerBtn2:IsValid() then
         Log("Failed to create button2", "error")
         return
@@ -188,7 +196,7 @@ local function CreateButton()
 
 
     ------------ Bt3n
-    local CustomServerBtn3 = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer3"))
+    CustomServerBtn3 = StaticConstructObject(ButtonClass, Canvas, FName("Button_CustomServer3"))
     if not CustomServerBtn3 or not CustomServerBtn3:IsValid() then
         Log("Failed to create button2", "error")
         return
@@ -314,8 +322,8 @@ local function TryRegisterHook()
             local btn = Context:get()
             if not btn:IsValid() then return end
 
-            local existingButton = FindObject("W_MainMenuButton_C", "Button_CustomServer")
-            if not existingButton:IsValid() then
+            -- local existingButton = FindObject("W_MainMenuButton_C", "Button_CustomServer")
+            if CustomServerBtn:IsValid() or not CustomServerBtn2:IsValid() or not CustomServerBtn3:IsValid() then
                 CreateButton()
             end
 
